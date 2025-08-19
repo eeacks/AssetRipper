@@ -19,6 +19,7 @@ using AssetRipper.SourceGenerated.Subclasses.SelectorTransitionConstant;
 using AssetRipper.SourceGenerated.Subclasses.StateConstant;
 using AssetRipper.SourceGenerated.Subclasses.StateMachineConstant;
 using AssetRipper.SourceGenerated.Subclasses.TransitionConstant;
+using System.Diagnostics;
 using System.Numerics;
 
 namespace AssetRipper.Processing.AnimatorControllers;
@@ -243,7 +244,8 @@ internal sealed class AnimatorStateMachineContext
 			// Unity 5+
 
 			int stateMachineCount = StateMachineConstant.StateMachineCount();
-			IndexedStateMachines = new StateMachineData[stateMachineCount];
+			//IndexedStateMachines = new StateMachineData[stateMachineCount];
+			IndexedStateMachines = new StateMachineData[(int)Math.Floor(StateMachineConstant.SelectorStateConstantArray.Count * 0.5)];
 
 			// assuming SelectorStateConstantArray follows the sequence: [Entry1, Exit1, Entry2, Exit2, ...]
 			// just in case, next code can handle StateMachines missing Entry or Exit SelectorStateConstant
@@ -254,7 +256,7 @@ internal sealed class AnimatorStateMachineContext
 				SelectorTransitionConstant[]? transitions = ssc.TransitionConstantArray.Count == 0 ? null :
 					ssc.TransitionConstantArray.Select(ptr => ptr.Data).ToArray();
 				uint sscFullPathID = ssc.FullPathID;
-				if (lastFullPathID != sscFullPathID)
+				if (stateMachineIndex == 0 || lastFullPathID != sscFullPathID)
 				{
 					IAnimatorStateMachine newStateMachine = VirtualAnimationFactory.CreateStateMachine(VirtualFile, Controller, LayerIndex, sscFullPathID);
 					IndexedStateMachines[stateMachineIndex] = new(newStateMachine, sscFullPathID);
@@ -272,13 +274,20 @@ internal sealed class AnimatorStateMachineContext
 				}
 				else
 				{
-					if (ssc.IsEntry)
+					try
 					{
-						IndexedStateMachines[stateMachineIndex - 1].EntryTransitions = transitions;
+						if (ssc.IsEntry)
+						{
+							IndexedStateMachines[stateMachineIndex - 1].EntryTransitions = transitions;
+						}
+						else
+						{
+							IndexedStateMachines[stateMachineIndex - 1].ExitTransitions = transitions;
+						}
 					}
-					else
+					catch
 					{
-						IndexedStateMachines[stateMachineIndex - 1].ExitTransitions = transitions;
+						Debugger.Break();
 					}
 				}
 			}
