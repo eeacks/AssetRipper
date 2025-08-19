@@ -19,7 +19,6 @@ using AssetRipper.SourceGenerated.Subclasses.SelectorTransitionConstant;
 using AssetRipper.SourceGenerated.Subclasses.StateConstant;
 using AssetRipper.SourceGenerated.Subclasses.StateMachineConstant;
 using AssetRipper.SourceGenerated.Subclasses.TransitionConstant;
-using System.Diagnostics;
 using System.Numerics;
 
 namespace AssetRipper.Processing.AnimatorControllers;
@@ -274,20 +273,13 @@ internal sealed class AnimatorStateMachineContext
 				}
 				else
 				{
-					try
+					if (ssc.IsEntry)
 					{
-						if (ssc.IsEntry)
-						{
-							IndexedStateMachines[stateMachineIndex - 1].EntryTransitions = transitions;
-						}
-						else
-						{
-							IndexedStateMachines[stateMachineIndex - 1].ExitTransitions = transitions;
-						}
+						IndexedStateMachines[stateMachineIndex - 1].EntryTransitions = transitions;
 					}
-					catch
+					else
 					{
-						Debugger.Break();
+						IndexedStateMachines[stateMachineIndex - 1].ExitTransitions = transitions;
 					}
 				}
 			}
